@@ -31,6 +31,7 @@ export default class MultiSlider extends React.Component {
       min: PropTypes.number,
       max: PropTypes.number,
       step: PropTypes.number,
+      minDistance: PropTypes.number,
 
       optionsArray: PropTypes.array,
 
@@ -45,13 +46,13 @@ export default class MultiSlider extends React.Component {
     static defaultProps = {
       values: [0],
       onValuesChangeStart: () => {
-        console.log('press started');
+        // console.log('press started');
       },
       onValuesChange: (values) => {
-        console.log('changing', values);
+        // console.log('changing', values);
       },
       onValuesChangeFinish: (values) => {
-        console.log('changed', values);
+        // console.log('changed', values);
       },
       step: 1,
       min: 0,
@@ -82,6 +83,7 @@ export default class MultiSlider extends React.Component {
         pastTwo: initialValues[1],
         positionOne: initialValues[0],
         positionTwo: initialValues[1],
+        minDistanceBetweenMarkers: this.props.minDistance
       };
     }
 
@@ -127,14 +129,18 @@ export default class MultiSlider extends React.Component {
       var value      = positionToValue(this.state.positionOne, this.optionsArray, this.props.sliderLength);
 
       var slipDisplacement = this.props.touchDimensions.slipDisplacement;
+      const minDistance = this.state.minDistanceBetweenMarkers;
 
-      if (Math.abs(gestureState.dy) < slipDisplacement || !slipDisplacement) {
+      // console.log('gesture_++',gestureState.dx)
+
+      if ((Math.abs(gestureState.dy) < slipDisplacement || !slipDisplacement) &&
+          (( this.state.positionTwo-confined > minDistance) || ( this.state.positionTwo-confined <= minDistance && gestureState.dx < 0))) {
         this.setState({
           positionOne: confined,
         });
       }
 
-      if (value !== this.state.valueOne) {
+      if ((value !== this.state.valueOne) ) {
         this.setState({
           valueOne: value
         }, () => {
@@ -154,8 +160,10 @@ export default class MultiSlider extends React.Component {
       var confined    = unconfined < bottom ? bottom : (unconfined > top ? top : unconfined);
       var value       = positionToValue(this.state.positionTwo, this.optionsArray, this.props.sliderLength);
       var slipDisplacement = this.props.touchDimensions.slipDisplacement;
+      const minDistance = this.state.minDistanceBetweenMarkers;
 
-      if (Math.abs(gestureState.dy) < slipDisplacement || !slipDisplacement) {
+      if ((Math.abs(gestureState.dy) < slipDisplacement || !slipDisplacement) &&
+          (( confined - this.state.positionOne > minDistance) || ( confined - this.state.positionOne <= minDistance && gestureState.dx > 0 ))) {
         this.setState({
           positionTwo: confined,
         });
